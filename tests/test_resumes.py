@@ -142,3 +142,85 @@ def test_resume_edit_rejects_title_over_160_characters(client, app):
     )
     assert response.status_code == 400
     assert "160 символов" in response.get_data(as_text=True)
+
+
+
+def test_user_can_create_and_update_resume_section(client, app):
+    client.post("/register", data={
+        "email": "sections@example.com",
+        "password": "secure-pass-123",
+        "password_confirm": "secure-pass-123",
+    })
+    client.post("/resumes/new", data={"title": "Резюме с разделами"})
+
+    with app.app_context():
+        resume_id = db.session.query(Resume).one().id
+
+    create_response = client.put(
+        f"/resumes/{resume_id}/sections/about",
+        json={"content": {"text": "Python-разработчик"}},
+    )
+    assert create_response.status_code == 201
+    assert create_response.json["section_type"] == "about"
+    assert create_response.json["content"] == {"text": "Python-разработчик"}
+
+    update_response = client.put(
+        f"/resumes/{resume_id}/sections/about",
+        json={"content": {"text": "Backend-разработчик"}},
+    )
+    assert update_response.status_code == 200
+    assert update_response.json["content"] == {"text": "Backend-разработчик"}
+
+    with app.app_context():
+        from app.models import Section
+
+        sections = db.session.query(Section).filter_by(resume_id=resume_id).all()
+        assert len(sections) == 1
+        assert sections[0].content == {"text": "Backend-разработчик"}
+
+
+def test_section_save_rejects_unknown_type_and_non_object_content(client, app):
+    client.post("/register", data={
+        "email": "invalid-section@example.com",
+        "password": "secure-pass-123",
+        "password_confirm": "secure-pass-123",
+    })
+    client.post("/resumes/new", data={"title": "Проверка секций"})
+
+    with app.app_context():
+        resume_id = db.session.query(Resume).one().id
+
+    unknown_type = client.put(
+        f"/resumes/{resume_id}/sections/personal",
+        json={"content": {"full_name": "Иван Иванов"}},
+    )
+    assert unknown_type.status_code == 400
+
+    invalid_content = client.put(
+        f"/resumes/{resume_id}/sections/skills",
+        json={"content": ["Python", "Flask"]},
+    )
+    assert invalid_content.status_code == 400
+
+
+def test_user_cannot_save_section_to_another_users_resume(client, app):
+    client.post("/register", data={
+        "email": "section-owner@example.com",
+        "password": "secure-pass-123",
+        "password_confirm": "secure-pass-123",
+    })
+    client.post("/logout")
+
+    with app.app_context():
+        other = create_user("section-other@example.com")
+        resume = Resume(user_id=other.id, title="Чужое резюме")
+        db.session.add(resume)
+        db.session.commit()
+        resume_id = resume.id
+
+    login(client, "section-owner@example.com")
+    response = client.put(
+        f"/resumes/{resume_id}/sections/about",
+        json={"content": {"text": "Не должно сохраниться"}},
+    )
+    assert response.status_code == 404
