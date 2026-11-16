@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ resume.title }} — ResuMake{% endblock %}
+{% block content %}
+<div class="mb-4">
+  <a class="text-decoration-none" href="{{ url_for('resumes.index') }}">← К моим резюме</a>
+</div>
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+  <div>
+    <p class="text-secondary mb-1">Черновик резюме</p>
+    <h1 class="h2">{{ resume.title }}</h1>
+    <p class="text-secondary">Создано {{ resume.created_at.strftime("%d.%m.%Y") }}</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('resumes.edit', resume_id=resume.id) }}">Переименовать</a>
+</div>
+<div class="card mt-4">
+  <div class="card-body">
+    <h2 class="h5">Содержание</h2>
+    {% if resume.sections %}
+      <p class="text-secondary">В этом резюме уже есть разделы. Редактор содержимого добавим следующим этапом.</p>
+    {% else %}
+      <p class="text-secondary mb-0">Пока здесь пусто. Следующим этапом добавим редактор разделов: контакты, опыт работы, образование и навыки.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
