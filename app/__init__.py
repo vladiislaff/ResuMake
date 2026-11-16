@@ -24,8 +24,10 @@ def create_app(test_config=None):
     from . import models  # noqa: F401
     from .routes.main import main_bp
     from .routes.auth import auth_bp
+    from .routes.resumes import resumes_bp
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(resumes_bp)
 
     @login_manager.user_loader
     def load_user(user_id):
