@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% if resume %}
+  {% set page_title = "Переименовать резюме" %}
+{% else %}
+  {% set page_title = "Новое резюме" %}
+{% endif %}
+{% block title %}{{ page_title }} — ResuMake{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <a class="text-decoration-none" href="{{ url_for('resumes.index') }}">← К моим резюме</a>
+    <h1 class="h2 mt-3 mb-4">{{ page_title }}</h1>
+    <form method="post">
+      <div class="mb-3">
+        <label for="title" class="form-label">Название резюме</label>
+        <input class="form-control" id="title" name="title" maxlength="160"
+               value="{{ title }}" required autofocus>
+        <div class="form-text">Например: «Frontend-разработчик» или «Моё резюме».</div>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Сохранить</button>
+        <a class="btn btn-outline-secondary" href="{{ url_for('resumes.index') }}">Отмена</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
